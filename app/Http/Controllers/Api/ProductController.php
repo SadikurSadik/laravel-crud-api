@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
@@ -24,9 +25,11 @@ class ProductController extends Controller
      */
     public function index(Request $request): \Illuminate\Http\JsonResponse
     {
-        $data = $this->service->all($request->all());
+        $data = $this->service->all(array_merge($request->all(), [
+            'user_id' => auth()->user()->role == Role::USER_ROLE ? auth()->user()->id : ''
+        ]));
 
-        return api($data)->success('Success!');
+        return response()->json($data);
     }
 
     /**
@@ -43,7 +46,7 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $this->service->store($request->all());
+            $data = $this->service->store(array_merge($request->all(), ['user_id' => auth()->user()->id]));
             DB::commit();
 
             debug_log("Product created successfully!", $data);
@@ -78,6 +81,11 @@ class ProductController extends Controller
      */
     public function update($id, Request $request): \Illuminate\Http\JsonResponse
     {
+        $this->validate($request, [
+            'title' => 'required',
+            'price' => 'required',
+        ]);
+
         DB::beginTransaction();
         try {
             $data = $this->service->update($id, $request->all());

@@ -57,13 +57,8 @@ class ApiJsonResponse extends ResponseFactory
             'code' => $this->code,
             'message' => $message,
             'details' => $this->details,
+            'data' => $this->data
         ];
-
-        if (array_key_exists('data', $this->data->toArray())) {
-            $response = array_merge($response, $this->data->toArray());
-        } else {
-            $response['data'] = $this->data;
-        }
 
         return $this->json($response, $this->code, $this->headers);
     }
@@ -78,13 +73,8 @@ class ApiJsonResponse extends ResponseFactory
             'code' => $this->code,
             'message' => $message,
             'details' => $this->details,
+            'data' => $this->data
         ];
-
-        if (array_key_exists('data', $this->data->toArray())) {
-            $response = array_merge($response, $this->data->toArray());
-        } else {
-            $response['data'] = $this->data;
-        }
 
         return $this->json($response, $this->code, $this->headers);
     }
