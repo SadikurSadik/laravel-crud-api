@@ -20,4 +20,9 @@ class Product extends Model
         'created_at' => 'datetime:Y-m-d h:i:s',
         'updated_at' => 'datetime:Y-m-d h:i:s',
     ];
+
+    public function getImageAttribute()
+    {
+        return url('images/default.jpg');
+    }
 }
