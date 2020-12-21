@@ -8,6 +8,8 @@ use App\Services\Product\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Mockery\Exception;
 
 class ProductController extends Controller
@@ -46,7 +48,12 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $this->service->store(array_merge($request->all(), ['user_id' => auth()->user()->id]));
+            $data = $request->only(['title', 'description', 'price']);
+            if ($request->photo) {
+                $data['image'] = 'images/products/' . $this->uploadProductPhoto($request->photo);
+            }
+
+            $data = $this->service->store(array_merge($data, ['user_id' => auth()->user()->id]));
             DB::commit();
 
             debug_log("Product created successfully!", $data);
@@ -88,12 +95,17 @@ class ProductController extends Controller
 
         DB::beginTransaction();
         try {
-            $data = $this->service->update($id, $request->all());
+            $data = $request->only(['title', 'description', 'price']);
+            if ($request->photo) {
+                $data['image'] = 'images/products/' . $this->uploadProductPhoto($request->photo);
+            }
+
+            $response = $this->service->update($id, $data);
             DB::commit();
 
             debug_log("Product updated successfully!", $data);
 
-            return api($data)->success('Product Updated successfully!', Response::HTTP_CREATED);
+            return api($response)->success('Product Updated successfully!', Response::HTTP_CREATED);
         } catch (\Exception $e) {
             debug_log("Product update failed!", $e->getTrace());
             DB::rollback();
@@ -121,5 +133,21 @@ class ProductController extends Controller
 
             return api()->fails($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    private function uploadProductPhoto($image): string
+    {
+        if (!File::isDirectory(public_path('images/products'))) {
+            File::makeDirectory(public_path('images/products'));
+        }
+
+        $type = explode(';', $image)[0];
+        $type = explode('/', $type)[1];
+        $image = preg_replace('/^data:image\/\w+;base64,/', '', $image);
+        $image = str_replace(' ', '+', $image);
+        $imageName = time().'.'.$type;
+        File::put(public_path('images/products'). '/' . $imageName, base64_decode($image));
+
+        return $imageName;
     }
 }

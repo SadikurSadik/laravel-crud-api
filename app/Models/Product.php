@@ -21,8 +21,12 @@ class Product extends Model
         'updated_at' => 'datetime:Y-m-d h:i:s',
     ];
 
-    public function getImageAttribute()
+    public function getImageAttribute($value)
     {
+        if ($value) {
+            return url($value);
+        }
+
         return url('images/default.jpg');
     }
 }
